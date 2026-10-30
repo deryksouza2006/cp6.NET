@@ -1,0 +1,88 @@
+@baseUrl = http://localhost:5080
+@token = {{login.response.body.$.token}}
+
+### 1. Login público. Execute antes das requisições protegidas.
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "Mauricio",
+  "password": "123456"
+}
+
+### 2. Senha incorreta: 401
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{"username": "Mauricio", "password": "errada"}
+
+### 3. Listar sem token: 401
+GET {{baseUrl}}/api/jogos
+
+### 4. Listar com token: 200
+GET {{baseUrl}}/api/jogos
+Authorization: Bearer {{token}}
+
+### 5. Cadastrar: 201. Guarde o id retornado.
+# @name criarJogo
+POST {{baseUrl}}/api/jogos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "titulo": "Hollow Knight",
+  "plataforma": "PC",
+  "genero": "Aventura",
+  "preco": 46.99,
+  "anoLancamento": 2017,
+  "estoque": 5
+}
+
+### 6. Buscar o jogo criado: 200
+GET {{baseUrl}}/api/jogos/{{criarJogo.response.body.$.id}}
+Authorization: Bearer {{token}}
+
+### 7. Atualizar: 200
+PUT {{baseUrl}}/api/jogos/{{criarJogo.response.body.$.id}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "titulo": "Hollow Knight",
+  "plataforma": "PC",
+  "genero": "Aventura",
+  "preco": 39.99,
+  "anoLancamento": 2017,
+  "estoque": 8
+}
+
+### 8. Filtro com preço máximo inclusivo: 200
+GET {{baseUrl}}/api/jogos/busca?plataforma=PC&precoMaximo=100
+Authorization: Bearer {{token}}
+
+### 9. Relatório: 200
+GET {{baseUrl}}/api/jogos/relatorio-estoque
+Authorization: Bearer {{token}}
+
+### 10. Excluir o jogo criado: 204
+DELETE {{baseUrl}}/api/jogos/{{criarJogo.response.body.$.id}}
+Authorization: Bearer {{token}}
+
+### 11. ID inexistente: 404
+GET {{baseUrl}}/api/jogos/2147483647
+Authorization: Bearer {{token}}
+
+### 12. Dados inválidos: 400
+POST {{baseUrl}}/api/jogos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"titulo": "", "plataforma": "PC", "genero": "RPG", "preco": -1, "anoLancamento": 0, "estoque": -1}
+
+### 13. Token inválido: 401
+GET {{baseUrl}}/api/jogos
+Authorization: Bearer invalido
+
+### 14. Documento OpenAPI
+GET {{baseUrl}}/openapi/v1.json
